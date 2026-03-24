@@ -51,6 +51,7 @@ async function getUsersDueCheckIn() {
 async function processCheckIn(user) {
   try {
     console.log(`📧 Processing check-in for ${user.name} (${user.email})`);
+    console.log(`🔗 BACKEND_URL: "${process.env.BACKEND_URL}"`);
 
     // Call TM2's check-in message generator
     const generateResponse = await axios.post(

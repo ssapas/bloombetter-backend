@@ -26,11 +26,20 @@ app.use('/api/checkin', checkinRoutes);
 app.use('/api/game', gameRoutes);
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  // Test Supabase connection
+  const { error } = await require('./src/supabaseClient')
+    .from('users')
+    .select('count')
+    .limit(1);
+
   res.status(200).json({
     status: 'ok',
     message: 'BloomBetter backend is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    database: error ? '❌ disconnected' : '✅ connected',
+    scheduler: '✅ running',
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
