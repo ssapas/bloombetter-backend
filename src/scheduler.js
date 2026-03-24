@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const supabase = require('./supabaseClient');
-const axios = require('axios');
+const { sendCheckInEmail } = require('./email');
 
 // This function finds all users due a check-in in the current 15-min window
 async function getUsersDueCheckIn() {
@@ -51,20 +51,26 @@ async function getUsersDueCheckIn() {
 async function processCheckIn(user) {
   try {
     console.log(`📧 Processing check-in for ${user.name} (${user.email})`);
-    console.log(`🔗 BACKEND_URL: "${process.env.BACKEND_URL}"`);
 
-    // Call TM2's check-in message generator
-    const generateResponse = await axios.post(
-      `${process.env.BACKEND_URL}/api/checkin/generate`,
-      {
-        userId: user.id,
-        name: user.name,
-        email: user.email,
-        message: `Good morning ${user.name}! This is your daily check-in from BloomBetter. How are you feeling today?`
-      }
-    );
+    const message = `Good morning ${user.name}! This is your daily check-in from BloomBetter. How are you feeling today?`;
 
-    console.log(`✅ Check-in complete for ${user.name}:`, generateResponse.data.message);
+    // Send the email directly
+    await sendCheckInEmail(user.email, user.name, message);
+
+    // Log the check-in to the database
+    const { error: logError } = await supabase
+      .from('check_ins')
+      .insert({
+        user_id: user.id,
+        message,
+        email_delivered: true
+      });
+
+    if (logError) {
+      console.error(`⚠️ Email sent but failed to log check-in:`, logError.message);
+    }
+
+    console.log(`✅ Check-in complete for ${user.name}`);
 
   } catch (err) {
     console.error(`❌ Failed check-in for ${user.name}:`, err.message);
