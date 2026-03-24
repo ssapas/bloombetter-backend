@@ -2,6 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
+const authRoutes = require('./src/routes/auth');
+const userRoutes = require('./src/routes/user');
+const moodRoutes = require('./src/routes/mood');
+const chatRoutes = require('./src/routes/chat');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -9,7 +14,13 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint — Railway uses this to confirm the server is alive
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/mood', moodRoutes);
+app.use('/api/chat', chatRoutes);
+
+// Health check
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -18,7 +29,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Start server
 app.listen(PORT, () => {
   console.log(`✅ BloomBetter backend running on port ${PORT}`);
 });
